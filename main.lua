@@ -1,27 +1,26 @@
-local Lander = {}
-Lander.x = 0
-Lander.y = 0
-Lander.vx = 0
-Lander.vy = 0
-Lander.angle = 270
-Lander.speed = 3
-Lander.vmax = 2
-Lander.engine_on = false
-Lander.img = love.graphics.newImage("images/ship.png")
-Lander.img_engine = love.graphics.newImage("images/engine.png")
-Lander.width = Lander.img:getWidth()
-Lander.height = Lander.img:getHeight()
-Lander.engine_width = Lander.img_engine:getWidth()
-Lander.engine_height = Lander.img_engine:getHeight()
-
-gravity = 0.6
-ground_depth = 20
-
-local Stars = {}
-Stars.number = 100
-
-
 function love.load()
+	Lander = {}
+	Lander.x = 0
+	Lander.y = 0
+	Lander.vx = 0
+	Lander.vy = 0
+	Lander.angle = 270
+	Lander.speed = 3
+	Lander.vmax = 1
+	Lander.engine_on = false
+	Lander.img = love.graphics.newImage("images/ship.png")
+	Lander.width = Lander.img:getWidth()
+	Lander.height = Lander.img:getHeight()
+	Lander.img_engine = love.graphics.newImage("images/engine.png")
+	Lander.engine_width = Lander.img_engine:getWidth()
+	Lander.engine_height = Lander.img_engine:getHeight()
+
+	gravity = 0.6
+	ground_depth = 20
+
+	Stars = {}
+	Stars.number = 100
+
 	game_width = love.graphics.getWidth()
 	game_height = love.graphics.getHeight()
 
@@ -74,13 +73,14 @@ function love.update(dt)
 	end
 
 	if love.keyboard.isDown('up') then
-		--There it is, movement equations, i don't completely get it right on but that's okay, gotta keep it under the arm
+		--Movement equations
 		local angle_rad = math.rad(Lander.angle)
 		local force_x = math.cos(angle_rad) * (Lander.speed * dt)
 		local force_y = math.sin(angle_rad) * (Lander.speed * dt)
 
 		Lander.vx = Lander.vx + force_x
 		Lander.vy = Lander.vy + force_y
+		----
 
 		Lander.engine_on = true
 	else
@@ -97,16 +97,18 @@ function love.draw()
 	--Drawing the ground
 	love.graphics.rectangle('fill', 0, game_height - ground_depth, game_width, ground_depth)
 
+	--Drawing the ship
 	love.graphics.draw(Lander.img, Lander.x, Lander.y, math.rad(Lander.angle), 1, 1, Lander.width / 2, Lander.height / 2)
 
+	--Drawing the exhaust of the engine
 	if Lander.engine_on == true then
 		love.graphics.draw(Lander.img_engine, Lander.x, Lander.y, math.rad(Lander.angle), 1, 1, Lander.engine_width / 2, Lander.engine_height / 2)
 	end
 
-	local __debug = "DATA :\n\n"
-	__debug = __debug .. "vx= " .. tostring(Lander.vx) .. "\n"
-	__debug = __debug .. "vy= " .. tostring(Lander.vy) .. "\n"
-	__debug = __debug .. "angle= " .. tostring(Lander.angle) .. "\n"
+	local __sdata = "DATA :\n"
+	__sdata = __sdata .. "vx= " .. tostring(Lander.vx) .. "\n"
+	__sdata = __sdata .. "vy= " .. tostring(Lander.vy) .. "\n"
+	__sdata = __sdata .. "angle= " .. tostring(Lander.angle) .. "\n"
 
-	love.graphics.print(__debug, 0, 0)
+	love.graphics.print(__sdata, 20, 20)
 end
