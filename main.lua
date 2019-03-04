@@ -14,6 +14,8 @@ function love.load()
 	Lander.img_engine = love.graphics.newImage("images/engine.png")
 	Lander.engine_width = Lander.img_engine:getWidth()
 	Lander.engine_height = Lander.img_engine:getHeight()
+	Lander.sound = love.audio.newSource('sounds/spacecraft.wav', 'static')
+	Lander.sound:isLooping(true)
 
 	gravity = 0.6
 	ground_depth = 20
@@ -83,8 +85,10 @@ function love.update(dt)
 		----
 
 		Lander.engine_on = true
+		Lander.sound:play()
 	else
 		Lander.engine_on = false
+		Lander.sound:stop()
 	end
 end
 
