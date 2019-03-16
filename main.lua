@@ -1,3 +1,5 @@
+io.stdout:setvbuf('no')
+
 function love.load()
 	Lander = {}
 	Lander.x = 0
@@ -20,6 +22,18 @@ function love.load()
 	gravity = 0.6
 	ground_depth = 20
 
+	ground_vertices = {
+		0,500, 
+		50,love.math.random(500, 595), 
+		200,love.math.random(500, 595), 
+		300,love.math.random(500, 595), 
+		400,love.math.random(500, 595), 
+		500,love.math.random(500, 595), 
+		600,love.math.random(500, 595), 
+		700,love.math.random(500, 595), 
+		800,520
+	}
+
 	Stars = {}
 	Stars.number = 100
 
@@ -36,6 +50,7 @@ function love.load()
 		Stars[i][1] = x_rand
 		Stars[i][2] = y_rand
 	end
+
 end
 
 
@@ -99,7 +114,10 @@ function love.draw()
 	love.graphics.points(Stars)
 
 	--Drawing the ground
-	love.graphics.rectangle('fill', 0, game_height - ground_depth, game_width, ground_depth)
+	love.graphics.setColor(0.6, 0.6, 0.6)
+	--love.graphics.rectangle('fill', 0, game_height - ground_depth, game_width, ground_depth)
+	love.graphics.line(ground_vertices)
+	love.graphics.setColor(1,1,1)
 
 	--Drawing the ship
 	love.graphics.draw(Lander.img, Lander.x, Lander.y, math.rad(Lander.angle), 1, 1, Lander.width / 2, Lander.height / 2)
