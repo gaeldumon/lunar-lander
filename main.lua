@@ -22,7 +22,7 @@ function love.load()
 	gravity = 0.6
 	ground_depth = 20
 
-	ground_vertices = {
+	ground_polyline = {
 		0,500, 
 		50,love.math.random(500, 595), 
 		200,love.math.random(500, 595), 
@@ -33,6 +33,14 @@ function love.load()
 		700,love.math.random(500, 595), 
 		800,520
 	}
+
+	groundY = {}
+
+	for i=1, #ground_polyline do
+		if i % 2 == 0 then
+			table.insert(groundY, ground_polyline[i])
+		end
+	end
 
 	Stars = {}
 	Stars.number = 100
@@ -50,7 +58,6 @@ function love.load()
 		Stars[i][1] = x_rand
 		Stars[i][2] = y_rand
 	end
-
 end
 
 
@@ -116,7 +123,7 @@ function love.draw()
 	--Drawing the ground
 	love.graphics.setColor(0.6, 0.6, 0.6)
 	--love.graphics.rectangle('fill', 0, game_height - ground_depth, game_width, ground_depth)
-	love.graphics.line(ground_vertices)
+	love.graphics.line(ground_polyline)
 	love.graphics.setColor(1,1,1)
 
 	--Drawing the ship
