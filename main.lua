@@ -8,7 +8,7 @@ function love.load()
 	Lander.vy = 0
 	Lander.angle = 270
 	Lander.speed = 3
-	Lander.vmax = 1
+	Lander.vmax = 2
 	Lander.engine_on = false
 	Lander.img = love.graphics.newImage("images/ship.png")
 	Lander.width = Lander.img:getWidth()
@@ -20,9 +20,23 @@ function love.load()
 	Lander.sound:isLooping(true)
 
 	gravity = 0.6
-	ground_depth = 20
 
-	ground_polyline = {
+	Ground = {}
+	Ground.depth = 20
+	Ground.Vertices = {}
+	Ground.Yvertices = {}
+	Ground.Xvertices = {}
+
+	Stars = {}
+	Stars.number = 100
+
+	GAME_WIDTH = love.graphics.getWidth()
+	GAME_HEIGHT = love.graphics.getHeight()
+
+	Lander.x = GAME_WIDTH / 2
+	Lander.y = GAME_HEIGHT / 2
+
+	Ground.Vertices = {
 		0,500, 
 		50,love.math.random(500, 595), 
 		200,love.math.random(500, 595), 
@@ -34,26 +48,34 @@ function love.load()
 		800,520
 	}
 
-	groundY = {}
-
-	for i=1, #ground_polyline do
-		if i % 2 == 0 then
-			table.insert(groundY, ground_polyline[i])
+	do
+		local i = 0
+		for i=1, #Ground.Vertices do
+			if i % 2 == 0 then
+				table.insert(Ground.Yvertices, Ground.Vertices[i])
+			else
+				table.insert(Ground.Xvertices, Ground.Vertices[i])
+			end
 		end
 	end
 
-	Stars = {}
-	Stars.number = 100
+	do
+		local i = 0
+		for i=1, #Ground.Xvertices do
+			print(tostring(Ground.Xvertices[i]))
+		end 
+	end
 
-	game_width = love.graphics.getWidth()
-	game_height = love.graphics.getHeight()
-
-	Lander.x = game_width / 2
-	Lander.y = game_height / 2
+	do
+		local i = 0
+		for i=1, #Ground.Yvertices do
+			print(tostring(Ground.Yvertices[i]))
+		end 
+	end
 
 	for i = 1, Stars.number do
-		local x_rand = love.math.random(5, game_width - 5)
-		local y_rand = love.math.random(5, game_height - 5)
+		local x_rand = love.math.random(5, GAME_WIDTH - 5)
+		local y_rand = love.math.random(5, GAME_HEIGHT - 5)
 		Stars[i] = {}
 		Stars[i][1] = x_rand
 		Stars[i][2] = y_rand
@@ -77,14 +99,20 @@ function love.update(dt)
 	if Lander.vx < -Lander.vmax then Lander.vx = -Lander.vmax end --Accelerating to the left (< 0)
 	if Lander.vx > Lander.vmax then Lander.vx = Lander.vmax end --Accelerating to the right (> 0)
 
-	--Dealing with ground collision : if posY of bottom of the ship == posY of ground then we stop everything
-	if Lander.y >= game_height - ground_depth - Lander.height / 2 then
-		Lander.vy = 0
-		Lander.vx = 0
-		gravity = 0
-	else
-		gravity = 0.6
+	----Ground collision : trouble colliding ship and ground vertices !
+	local x,y
+	for x=1, #Ground.Xvertices do
+		for y=1, #Ground.Yvertices do
+			if Lander.x >= Ground.Xvertices[x] and Lander.y >= Ground.Yvertices[y] - Lander.height / 2 then
+				Lander.vy = 0
+				Lander.vx = 0
+				gravity = 0
+			else
+				gravity = 0.6
+			end
+		end
 	end
+	----
 
 	if love.keyboard.isDown('right') then
 		Lander.angle = Lander.angle + (90 * dt)
@@ -97,7 +125,7 @@ function love.update(dt)
 	end
 
 	if love.keyboard.isDown('up') then
-		--Movement equations
+		----Movement equations
 		local angle_rad = math.rad(Lander.angle)
 		local force_x = math.cos(angle_rad) * (Lander.speed * dt)
 		local force_y = math.sin(angle_rad) * (Lander.speed * dt)
@@ -120,11 +148,12 @@ function love.draw()
 	--Really handy new points methods : just give a metatable (2 dimensions) with x and y coordinates to it
 	love.graphics.points(Stars)
 
-	--Drawing the ground
+	----Drawing the ground
 	love.graphics.setColor(0.6, 0.6, 0.6)
-	--love.graphics.rectangle('fill', 0, game_height - ground_depth, game_width, ground_depth)
-	love.graphics.line(ground_polyline)
+	--love.graphics.rectangle('fill', 0, GAME_HEIGHT - Ground.depth, GAME_WIDTH, Ground.depth)
+	love.graphics.line(Ground.Vertices)
 	love.graphics.setColor(1,1,1)
+	----
 
 	--Drawing the ship
 	love.graphics.draw(Lander.img, Lander.x, Lander.y, math.rad(Lander.angle), 1, 1, Lander.width / 2, Lander.height / 2)
