@@ -1,5 +1,7 @@
 io.stdout:setvbuf('no')
 
+function math.dist(x1,y1, x2,y2) return ((x2-x1)^2+(y2-y1)^2)^0.5 end
+
 function love.load()
 	Lander = {}
 	Lander.x = 0
@@ -24,6 +26,7 @@ function love.load()
 	Ground = {}
 	Ground.depth = 20
 	Ground.Vertices = {}
+	Ground.LinesLength = {}
 	Ground.Yvertices = {}
 	Ground.Xvertices = {}
 
@@ -37,20 +40,21 @@ function love.load()
 	Lander.y = GAME_HEIGHT / 2
 
 	Ground.Vertices = {
-		0,500, 
-		50,love.math.random(500, 595), 
-		200,love.math.random(500, 595), 
-		300,love.math.random(500, 595), 
-		400,love.math.random(500, 595), 
-		500,love.math.random(500, 595), 
-		600,love.math.random(500, 595), 
-		700,love.math.random(500, 595), 
+		0,500,
+		50,love.math.random(500, 595),
+		200,love.math.random(500, 595),
+		300,love.math.random(500, 595),
+		400,love.math.random(500, 595),
+		500,love.math.random(500, 595),
+		600,love.math.random(500, 595),
+		700,love.math.random(500, 595),
 		800,520
 	}
 
+	----Alternatively putting Xs and Ys of ground vertices in their own tables, for later use of collision detection with ship
 	do
 		local i = 0
-		for i=1, #Ground.Vertices do
+		for i = 1, #Ground.Vertices do
 			if i % 2 == 0 then
 				table.insert(Ground.Yvertices, Ground.Vertices[i])
 			else
@@ -58,21 +62,26 @@ function love.load()
 			end
 		end
 	end
+	----
+
+	----Putting each vertices lengths in their own table, for later use of collision detection with ship
+	do
+		local i
+		for i = 1, #Ground.Xvertices - 1 do
+			local dist = math.dist(Ground.Xvertices[i], Ground.Yvertices[i], Ground.Xvertices[i+1], Ground.Yvertices[i+1])
+			table.insert(Ground.LinesLength, dist)
+		end
+	end
+	----
 
 	do
-		local i = 0
-		for i=1, #Ground.Xvertices do
-			print(tostring(Ground.Xvertices[i]))
-		end 
+		local i
+		for i = 1, #Ground.LinesLength do
+			print(tostring(Ground.LinesLength[i]))
+		end
 	end
 
-	do
-		local i = 0
-		for i=1, #Ground.Yvertices do
-			print(tostring(Ground.Yvertices[i]))
-		end 
-	end
-
+	----Creating random Stars coordinates with a margin of 5px
 	for i = 1, Stars.number do
 		local x_rand = love.math.random(5, GAME_WIDTH - 5)
 		local y_rand = love.math.random(5, GAME_HEIGHT - 5)
@@ -80,6 +89,7 @@ function love.load()
 		Stars[i][1] = x_rand
 		Stars[i][2] = y_rand
 	end
+	----
 end
 
 
@@ -99,17 +109,17 @@ function love.update(dt)
 	if Lander.vx < -Lander.vmax then Lander.vx = -Lander.vmax end --Accelerating to the left (< 0)
 	if Lander.vx > Lander.vmax then Lander.vx = Lander.vmax end --Accelerating to the right (> 0)
 
-	----Ground collision : trouble colliding ship and ground vertices !
-	local x,y
-	for x=1, #Ground.Xvertices do
-		for y=1, #Ground.Yvertices do
-			if Lander.x >= Ground.Xvertices[x] and Lander.y >= Ground.Yvertices[y] - Lander.height / 2 then
-				Lander.vy = 0
-				Lander.vx = 0
-				gravity = 0
-			else
-				gravity = 0.6
-			end
+	----Ground collision
+	local i, j
+	for i = 1, #Ground.Xvertices - 1 do
+		local d1 = math.dist(Lander.x, Lander.y + Lander.height/2, Ground.Xvertices[i], Ground.Yvertices[i])
+		local d2 = math.dist(Lander.x, Lander.y + Lander.height/2, Ground.Xvertices[i+1], Ground.Yvertices[i+1])
+		
+		if d1 + d2 >= Ground.LinesLength[i]-0.1 and d1 + d2 <= Ground.LinesLength[i]+0.1 then
+			Lander.vy = 0
+			Lander.vx = 0
+			Lander.y = Ground.Yvertices[i]
+			gravity = 0
 		end
 	end
 	----
@@ -145,7 +155,7 @@ end
 
 
 function love.draw()
-	--Really handy new points methods : just give a metatable (2 dimensions) with x and y coordinates to it
+	--Drawing the Stars. Really handy new points methods : just give a metatable (2 dimensions) with x and y coordinates to it
 	love.graphics.points(Stars)
 
 	----Drawing the ground
