@@ -103,7 +103,7 @@ function love.update(dt)
 	Lander.y = Lander.y + Lander.vy
 
 	--This is the way I deal with maximum velocity of the lander
-	--I don't deal with the downwards acceleration : it'd be counter intuitive about the gravity pull we apply at the beginning
+	--I don't deal with the downwards acceleration limit: it'd be counter intuitive about the gravity pull we apply at the beginning
 	--If you turn the engine on when going down it's the gravity pull + the "normal" engine acceleration (cf. press up key) => it is not constrained by a maximum velocity
 	if Lander.vy < -Lander.vmax then Lander.vy = -Lander.vmax end --Accelerating upwards (< 0)
 	if Lander.vx < -Lander.vmax then Lander.vx = -Lander.vmax end --Accelerating to the left (< 0)
