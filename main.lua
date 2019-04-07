@@ -1,8 +1,63 @@
 io.stdout:setvbuf('no')
+love.graphics.setDefaultFilter("nearest")
 
 function math.dist(x1,y1, x2,y2) return ((x2-x1)^2+(y2-y1)^2)^0.5 end
 
 function love.load()
+	GAME_WIDTH = love.graphics.getWidth()
+	GAME_HEIGHT = love.graphics.getHeight()
+
+	Map = {}
+	tilesheet = love.graphics.newImage('images/gc-tilesheet1.png')
+	TileTextures = {}
+	Map.TILE_HEIGHT = 32
+	Map.TILE_WIDTH = 32
+	Map.MAP_HEIGHT = 19
+	Map.MAP_WIDTH = 25
+	Map.Grid = { 
+		{ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
+		{ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
+		{ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
+		{ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
+		{ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
+		{ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
+		{ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
+		{ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
+		{ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
+		{ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
+		{ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
+		{ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
+		{ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
+		{ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
+		{ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
+		{ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
+		{ 53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53 },
+		{ 53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53 },
+		{ 53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53 }
+	}
+
+	TileTextures[0] = nil
+
+    --Reading/cuting each tilesheet tiles one by one : not related to the screen in any way
+    local nb_cols = tilesheet:getWidth() / Map.TILE_WIDTH
+    local nb_lines = tilesheet:getHeight() / Map.TILE_HEIGHT
+    local l,c
+    local id = 1
+    for l = 1, nb_lines do
+      for c = 1, nb_cols do
+        TileTextures[id] = love.graphics.newQuad(
+          (c - 1) * Map.TILE_WIDTH, 
+          (l - 1) * Map.TILE_HEIGHT, 
+          Map.TILE_WIDTH, 
+          Map.TILE_HEIGHT, 
+          tilesheet:getWidth(),
+          tilesheet:getHeight()
+        )
+        id = id + 1
+      end
+    end
+    ----
+
 	Lander = {}
 	Lander.x = 0
 	Lander.y = 0
@@ -11,6 +66,7 @@ function love.load()
 	Lander.angle = 270
 	Lander.speed = 3
 	Lander.vmax = 2
+	Lander.fuel = 200
 	Lander.engine_on = false
 	Lander.img = love.graphics.newImage("images/ship.png")
 	Lander.width = Lander.img:getWidth()
@@ -23,63 +79,11 @@ function love.load()
 
 	gravity = 0.6
 
-	Ground = {}
-	Ground.depth = 20
-	Ground.Vertices = {}
-	Ground.LinesLength = {}
-	Ground.Yvertices = {}
-	Ground.Xvertices = {}
-
 	Stars = {}
 	Stars.number = 100
 
-	GAME_WIDTH = love.graphics.getWidth()
-	GAME_HEIGHT = love.graphics.getHeight()
-
 	Lander.x = GAME_WIDTH / 2
 	Lander.y = GAME_HEIGHT / 2
-
-	Ground.Vertices = {
-		0,500,
-		50,love.math.random(500, 595),
-		200,love.math.random(500, 595),
-		300,love.math.random(500, 595),
-		400,love.math.random(500, 595),
-		500,love.math.random(500, 595),
-		600,love.math.random(500, 595),
-		700,love.math.random(500, 595),
-		800,520
-	}
-
-	----Alternatively putting Xs and Ys of ground vertices in their own tables, for later use of collision detection with ship
-	do
-		local i = 0
-		for i = 1, #Ground.Vertices do
-			if i % 2 == 0 then
-				table.insert(Ground.Yvertices, Ground.Vertices[i])
-			else
-				table.insert(Ground.Xvertices, Ground.Vertices[i])
-			end
-		end
-	end
-	----
-
-	----Putting each vertices lengths in their own table, for later use of collision detection with ship
-	do
-		local i
-		for i = 1, #Ground.Xvertices - 1 do
-			local dist = math.dist(Ground.Xvertices[i], Ground.Yvertices[i], Ground.Xvertices[i+1], Ground.Yvertices[i+1])
-			table.insert(Ground.LinesLength, dist)
-		end
-	end
-	----
-
-	do
-		local i
-		for i = 1, #Ground.LinesLength do
-			print(tostring(Ground.LinesLength[i]))
-		end
-	end
 
 	----Creating random Stars coordinates with a margin of 5px
 	for i = 1, Stars.number do
@@ -109,21 +113,7 @@ function love.update(dt)
 	if Lander.vx < -Lander.vmax then Lander.vx = -Lander.vmax end --Accelerating to the left (< 0)
 	if Lander.vx > Lander.vmax then Lander.vx = Lander.vmax end --Accelerating to the right (> 0)
 
-	----Ground collision
-	local i, j
-	for i = 1, #Ground.Xvertices - 1 do
-		local d1 = math.dist(Lander.x, Lander.y + Lander.height/2, Ground.Xvertices[i], Ground.Yvertices[i])
-		local d2 = math.dist(Lander.x, Lander.y + Lander.height/2, Ground.Xvertices[i+1], Ground.Yvertices[i+1])
-		
-		if d1 + d2 >= Ground.LinesLength[i]-0.1 and d1 + d2 <= Ground.LinesLength[i]+0.1 then
-			Lander.vy = 0
-			Lander.vx = 0
-			Lander.y = Ground.Yvertices[i]
-			gravity = 0
-		end
-	end
-	----
-
+	----SHIP CONTROL
 	if love.keyboard.isDown('right') then
 		Lander.angle = Lander.angle + (90 * dt)
 		if Lander.angle > 360 then Lander.angle = 0 end
@@ -150,20 +140,35 @@ function love.update(dt)
 		Lander.engine_on = false
 		Lander.sound:stop()
 	end
+	----
+
+	if Lander.y > GAME_HEIGHT - Map.TILE_HEIGHT * 3 then
+		Lander.vy = 0
+		Lander.vx = 0
+		gravity = 0
+		Lander.y = GAME_HEIGHT - Map.TILE_HEIGHT * 3 
+	end
 end
 
 
 
 function love.draw()
+	----Drawing the actual textures "cut" off the tilesheet in Game.Load()
+    local c, l
+    for l = 1, Map.MAP_HEIGHT do
+      for c = 1, Map.MAP_WIDTH do
+        local id = Map.Grid[l][c]
+        local texQuad = TileTextures[id]
+        if texQuad ~= nil then
+            local x = (c - 1) * Map.TILE_WIDTH
+            local y = (l - 1) * Map.TILE_HEIGHT
+            love.graphics.draw(tilesheet, texQuad, x, y)
+        end
+      end
+    end
+    ----
 	--Drawing the Stars. Really handy new points methods : just give a metatable (2 dimensions) with x and y coordinates to it
 	love.graphics.points(Stars)
-
-	----Drawing the ground
-	love.graphics.setColor(0.6, 0.6, 0.6)
-	--love.graphics.rectangle('fill', 0, GAME_HEIGHT - Ground.depth, GAME_WIDTH, Ground.depth)
-	love.graphics.line(Ground.Vertices)
-	love.graphics.setColor(1,1,1)
-	----
 
 	--Drawing the ship
 	love.graphics.draw(Lander.img, Lander.x, Lander.y, math.rad(Lander.angle), 1, 1, Lander.width / 2, Lander.height / 2)
@@ -173,10 +178,13 @@ function love.draw()
 		love.graphics.draw(Lander.img_engine, Lander.x, Lander.y, math.rad(Lander.angle), 1, 1, Lander.engine_width / 2, Lander.engine_height / 2)
 	end
 
-	local __sdata = "DATA :\n"
-	__sdata = __sdata .. "vx= " .. tostring(Lander.vx) .. "\n"
-	__sdata = __sdata .. "vy= " .. tostring(Lander.vy) .. "\n"
-	__sdata = __sdata .. "angle= " .. tostring(Lander.angle) .. "\n"
+	local abs_vy = math.abs(Lander.vy)
+	local abs_vx = math.abs(Lander.vx)
+	local str_data = ""
+	str_data = str_data .. "Y VELOCITY : " .. tostring(abs_vy) .. "\n"
+	str_data = str_data .. "X VELOCITY : " .. tostring(abs_vx) .. "\n"
+	str_data = str_data .. "ANGLE : " .. tostring(Lander.angle) .. "\n"
+	str_data = str_data .. "FUEL : " .. tostring(Lander.fuel) .. "\n"
 
-	love.graphics.print(__sdata, 20, 20)
+	love.graphics.print(str_data, 20, 20, 0, 1.1, 1.1)
 end
