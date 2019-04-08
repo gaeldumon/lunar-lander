@@ -28,6 +28,7 @@ function love.load()
 	Lander.fuel = 100
 	Lander.engine_on = false
 	Lander.crash = false
+	Lander.landed = false
 
 	Lander.img = love.graphics.newImage("images/ship.png")
 	Lander.width = Lander.img:getWidth()
@@ -161,11 +162,11 @@ function love.update(dt)
 		local c = math.floor(Lander.x / Map.TILE_WIDTH) + 1
 		local l = math.floor((Lander.y + Lander.height / 2) / Map.TILE_HEIGHT) + 1
 		if Map.Grid[l][c] == 53 then
-			if goodLanding(Lander.vx, Lander.vy, Lander.angle) == true then
+			if goodLanding(Lander.vy, Lander.angle) == true then
 				Lander.vx = 0
 				Lander.vy = 0
 				gravity = 0
-				Lander.crash = false
+				Lander.landed = true
 			else
 				Lander.crash = true
 				Lander.vx = 0
@@ -209,6 +210,14 @@ function love.draw()
 		love.graphics.draw(Lander.img_engine, Lander.x, Lander.y, math.rad(Lander.angle), 1, 1, Lander.engine_width / 2, Lander.engine_height / 2)
 	end
 	----
+
+	if Lander.crash == true then
+		love.graphics.print("BOOM ! LANDER CRASHED", GAME_WIDTH / 2 - 180, GAME_HEIGHT / 2, 0, 2, 2)
+	end
+
+	if Lander.landed == true then
+		love.graphics.print("GOOD JOB ! LANDING IS GOOD", GAME_WIDTH / 2 - 180, GAME_HEIGHT / 2 - 64, 0, 2, 2)
+	end
 
 	----PRINTING LANDER DATA
 	local abs_vy = math.abs(Lander.vy)
