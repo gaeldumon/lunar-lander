@@ -3,8 +3,16 @@ love.graphics.setDefaultFilter("nearest")
 
 function math.dist(x1,y1, x2,y2) return ((x2-x1)^2+(y2-y1)^2)^0.5 end
 
-function goodLanding(pvy, pAngle)
-	if math.abs(pvy) <= 0.6 and pAngle >= 265 and pAngle <= 275 then
+function round2(num, numDecimalPlaces)
+  return string.format("%." .. (numDecimalPlaces or 0) .. "f", num)
+end
+
+function goodLanding(pvx, pvy, pAngle, pFuel)
+	if pvy >= 0.6 and 
+		pvx >= 0.6 and
+		pAngle >= 265 and 
+		pAngle <= 275 and 
+		pFuel > 0 then
 		return true
 	else
 		return false
@@ -16,6 +24,8 @@ function love.load()
 
 	GAME_WIDTH = love.graphics.getWidth()
 	GAME_HEIGHT = love.graphics.getHeight()
+
+	current_screen = 'menu'
 
 	Lander = {}
 	Lander.x = GAME_WIDTH / 2
@@ -113,71 +123,69 @@ end
 
 function love.update(dt)
 
-	--Simulate the gravity pull of the moon : the lander is sort of attracted to the bottom because we increment its vertical velocity
-	--It's an incrementation so it's like an acceleration : the vertical velocity is not constant (that'd have been : Lander.vy = gravity)
-	Lander.vy = Lander.vy + (gravity * dt)
+	if current_screen == 'game' then
 
-	Lander.x = Lander.x + Lander.vx
-	Lander.y = Lander.y + Lander.vy
+		--Simulate the gravity pull of the moon : the lander is sort of attracted to the bottom because we increment its vertical velocity
+		--It's an incrementation so it's like an acceleration : the vertical velocity is not constant (that'd have been : Lander.vy = gravity)
+		Lander.vy = Lander.vy + (gravity * dt)
 
-	--This is the way I deal with maximum velocity of the lander
-	--I don't deal with the downwards acceleration limit: it'd be counter intuitive about the gravity pull we apply at the beginning
-	--If you turn the engine on when going down it's the gravity pull + the "normal" engine acceleration (cf. press up key) => it is not constrained by a maximum velocity
-	if Lander.vy < -Lander.vmax then Lander.vy = -Lander.vmax end --Accelerating upwards (< 0)
-	if Lander.vx < -Lander.vmax then Lander.vx = -Lander.vmax end --Accelerating to the left (< 0)
-	if Lander.vx > Lander.vmax then Lander.vx = Lander.vmax end --Accelerating to the right (> 0)
+		Lander.x = Lander.x + Lander.vx
+		Lander.y = Lander.y + Lander.vy
 
-	----SHIP CONTROL
-	if love.keyboard.isDown('right') then
-		Lander.angle = Lander.angle + (90 * dt)
-		if Lander.angle > 360 then Lander.angle = 0 end
-	end
+		--This is the way I deal with maximum velocity of the lander
+		--I don't deal with the downwards acceleration limit: it'd be counter intuitive about the gravity pull we apply at the beginning
+		--If you turn the engine on when going down it's the gravity pull + the "normal" engine acceleration (cf. press up key) => it is not constrained by a maximum velocity
+		if Lander.vy < -Lander.vmax then Lander.vy = -Lander.vmax end --Accelerating upwards (< 0)
+		if Lander.vx < -Lander.vmax then Lander.vx = -Lander.vmax end --Accelerating to the left (< 0)
+		if Lander.vx > Lander.vmax then Lander.vx = Lander.vmax end --Accelerating to the right (> 0)
 
-	if love.keyboard.isDown('left') then
-		Lander.angle = Lander.angle - (90 * dt)
-		if Lander.angle < 0 then Lander.angle = 360 end
-	end
+		----SHIP CONTROL
+		if love.keyboard.isDown('right') then
+			Lander.angle = Lander.angle + (90 * dt)
+			if Lander.angle > 360 then Lander.angle = 0 end
+		end
 
-	if love.keyboard.isDown('up') and Lander.fuel > 0 then
-		----Movement equations
-		local angle_rad = math.rad(Lander.angle)
-		local force_x = math.cos(angle_rad) * (Lander.speed * dt)
-		local force_y = math.sin(angle_rad) * (Lander.speed * dt)
+		if love.keyboard.isDown('left') then
+			Lander.angle = Lander.angle - (90 * dt)
+			if Lander.angle < 0 then Lander.angle = 360 end
+		end
 
-		Lander.vx = Lander.vx + force_x
-		Lander.vy = Lander.vy + force_y
+		if love.keyboard.isDown('up') and Lander.fuel > 0 then
+			----Movement equations
+			local angle_rad = math.rad(Lander.angle)
+			local force_x = math.cos(angle_rad) * (Lander.speed * dt)
+			local force_y = math.sin(angle_rad) * (Lander.speed * dt)
+
+			Lander.vx = Lander.vx + force_x
+			Lander.vy = Lander.vy + force_y
+			----
+
+			Lander.engine_on = true
+			Lander.fuel = Lander.fuel - 1
+			Lander.sound:play()
+		else
+			Lander.engine_on = false
+			Lander.sound:stop()
+		end
 		----
 
-		Lander.engine_on = true
-		Lander.fuel = Lander.fuel - 1
-		Lander.sound:play()
-	else
-		Lander.engine_on = false
-		Lander.sound:stop()
-	end
-	----
-
-	----SHIP GROUND COLLISION
-	do
-		local c = math.floor(Lander.x / Map.TILE_WIDTH) + 1
-		local l = math.floor((Lander.y + Lander.height / 2) / Map.TILE_HEIGHT) + 1
-		if Map.Grid[l][c] == 53 then
-			if goodLanding(Lander.vy, Lander.angle) == true then
+		----SHIP GROUND COLLISION
+		do
+			local c = math.floor(Lander.x / Map.TILE_WIDTH) + 1
+			local l = math.floor((Lander.y + Lander.height / 2) / Map.TILE_HEIGHT) + 1
+			if Map.Grid[l][c] == 53 then
+				if goodLanding(Lander.vx, Lander.vy, Lander.angle, Lander.fuel) == true then
+					current_screen = 'win'
+				end
 				Lander.vx = 0
 				Lander.vy = 0
 				gravity = 0
-				Lander.landed = true
 			else
-				Lander.crash = true
-				Lander.vx = 0
-				Lander.vy = 0
-				gravity = 0
+				gravity = 0.6
 			end
-		else
-			gravity = 0.6
 		end
+		----
 	end
-	----
 
 end
 
@@ -202,33 +210,57 @@ function love.draw()
 	--DRAW STARS
 	love.graphics.points(Stars)
 
-	--DRAW THE SHIP
-	love.graphics.draw(Lander.img, Lander.x, Lander.y, math.rad(Lander.angle), 1, 1, Lander.width / 2, Lander.height / 2)
+	if current_screen == 'menu' then
 
-	----DRAW ENGINE EXHAUST
-	if Lander.engine_on == true then
-		love.graphics.draw(Lander.img_engine, Lander.x, Lander.y, math.rad(Lander.angle), 1, 1, Lander.engine_width / 2, Lander.engine_height / 2)
-	end
-	----
+		local str_title = "LUNAR LANDER"
+		local str_start = "Press SPACE to Start"
+		love.graphics.print(str_title, GAME_WIDTH / 4, GAME_HEIGHT / 3.5, 0, 4, 4)
+		love.graphics.print(str_start, GAME_WIDTH / 3, GAME_HEIGHT / 3.5 + 132, 0, 2, 2)
 
-	if Lander.crash == true then
-		love.graphics.print("BOOM ! LANDER CRASHED", GAME_WIDTH / 2 - 180, GAME_HEIGHT / 2, 0, 2, 2)
 	end
 
-	if Lander.landed == true then
-		love.graphics.print("GOOD JOB ! LANDING IS GOOD", GAME_WIDTH / 2 - 180, GAME_HEIGHT / 2 - 64, 0, 2, 2)
+	if current_screen == 'win' then
+
+		local str_win = "MODULE IS LANDED. CONGRATULATIONS."
+		love.graphics.print(str_win, GAME_WIDTH / 5, GAME_HEIGHT / 2, 0, 2, 2)
+
+		--DRAW THE SHIP
+		love.graphics.draw(Lander.img, Lander.x, Lander.y, math.rad(Lander.angle), 1, 1, Lander.width / 2, Lander.height / 2)
+
 	end
 
-	----PRINTING LANDER DATA
-	local abs_vy = math.abs(Lander.vy)
-	local abs_vx = math.abs(Lander.vx)
-	local str_data = ""
-	str_data = str_data .. "Y VELOCITY : " .. tostring(abs_vy) .. "\n"
-	str_data = str_data .. "X VELOCITY : " .. tostring(abs_vx) .. "\n"
-	str_data = str_data .. "ANGLE : " .. tostring(Lander.angle) .. "\n"
-	str_data = str_data .. "FUEL : " .. tostring(Lander.fuel) .. "\n"
+	if current_screen == 'game' then
+		--DRAW THE SHIP
+		love.graphics.draw(Lander.img, Lander.x, Lander.y, math.rad(Lander.angle), 1, 1, Lander.width / 2, Lander.height / 2)
 
-	love.graphics.print(str_data, 20, 20, 0, 1.1, 1.1)
-	----
+		----DRAW ENGINE EXHAUST
+		if Lander.engine_on == true then
+			love.graphics.draw(Lander.img_engine, Lander.x, Lander.y, math.rad(Lander.angle), 1, 1, Lander.engine_width / 2, Lander.engine_height / 2)
+		end
+		----
 
+		----PRINTING LANDER DATA
+		local vx = round2(math.abs(Lander.vx), 1)
+		local vy = round2(math.abs(Lander.vy), 1)
+		local ang = math.floor(Lander.angle)
+		local fuel = Lander.fuel
+
+		local str_data = ""
+		str_data = str_data .. "X VELOCITY : " .. vx .. "\n"
+		str_data = str_data .. "Y VELOCITY : " .. vy .. "\n"
+		str_data = str_data .. "ANGLE : " .. ang .. "\n"
+		str_data = str_data .. "FUEL : " .. fuel .. "\n"
+
+		love.graphics.print(str_data, 20, 20, 0, 1.1, 1.1)
+		----
+	end
+
+end
+
+function love.keypressed(key)
+	if current_screen == 'menu' then
+		if key == 'space' then
+			current_screen = 'game'
+		end
+	end
 end
