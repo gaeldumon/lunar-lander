@@ -1,7 +1,8 @@
 # Game Dev Journey
-### Week #1
 
-A Lunar Lander with LÖVE
+### Part#1 - Lua and Love2D
+
+Lunar Lander prototype
 
 ![Screenshot](screenshot/lunarlander_screenshot.png)
 
