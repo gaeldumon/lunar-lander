@@ -40,15 +40,15 @@ function love.load()
 	Lander.crash = false
 	Lander.landed = false
 
-	Lander.img = love.graphics.newImage("images/ship.png")
+	Lander.img = love.graphics.newImage("images/spaceship.png")
 	Lander.width = Lander.img:getWidth()
 	Lander.height = Lander.img:getHeight()
 
-	Lander.img_engine = love.graphics.newImage("images/engine.png")
+	Lander.img_engine = love.graphics.newImage("images/engine-exhaust.png")
 	Lander.engine_width = Lander.img_engine:getWidth()
 	Lander.engine_height = Lander.img_engine:getHeight()
 
-	Lander.sound = love.audio.newSource('sounds/spaceship.ogg', 'static')
+	Lander.sound = love.audio.newSource('sounds/spaceship.wav', 'static')
 	Lander.sound:isLooping(true)
 
 	gravity = 0.6
