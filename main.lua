@@ -7,18 +7,17 @@ function round2(num, numDecimalPlaces)
   return string.format("%." .. (numDecimalPlaces or 0) .. "f", num)
 end
 
-function goodLanding(pvx, pvy, pAngle, pFuel)
-	if pvy >= 0.6 and 
-		pvx >= 0.6 and
-		pAngle >= 265 and 
-		pAngle <= 275 and 
-		pFuel > 0 then
+function goodLanding()
+	if math.abs(Lander.vy) <= 1 and 
+		math.abs(Lander.vx) <= 1 and
+		Lander.angle >= 265 and 
+		Lander.angle <= 275 and 
+		Lander.fuel > 0 then
 		return true
 	else
 		return false
 	end
 end
-
 
 function love.load()
 
@@ -28,8 +27,8 @@ function love.load()
 	current_screen = 'menu'
 
 	Lander = {}
-	Lander.x = GAME_WIDTH / 2
-	Lander.y = GAME_HEIGHT / 2
+	Lander.x = love.math.random(50, GAME_WIDTH - 50)
+	Lander.y = GAME_HEIGHT / 4
 	Lander.vx = 0
 	Lander.vy = 0
 	Lander.angle = 270
@@ -51,7 +50,7 @@ function love.load()
 	Lander.sound = love.audio.newSource('sounds/spaceship.wav', 'static')
 	Lander.sound:isLooping(true)
 
-	gravity = 0.6
+	gravity = 0.4
 
 	Stars = {}
 	Stars.number = 100
@@ -60,27 +59,52 @@ function love.load()
 	Map.tilesheet = love.graphics.newImage('images/gc-tilesheet1.png')
 	Map.TileTextures = {}
 
-	Map.Grid = { 
-					{ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
-					{ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
-					{ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
-					{ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
-					{ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
-					{ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
-					{ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
-					{ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 },
-					{ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0	},
-					{ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0	},
-					{ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0	},
-					{ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0	},
-					{ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,53 },
-					{ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,53 },
-					{ 53,53,0,0,0,0,0,0,0,53,53,53,53,0,0,0,0,0,0,0,0,0,0,53,53 },
-					{ 53,53,53,0,0,0,0,53,53,53,53,53,53,53,0,0,0,0,0,0,0,0,0,53,53 },
-					{ 53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53 },
-					{ 53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53 },
-					{ 53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53 }
+	grid1 = { 
+		{ 00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00 },
+		{ 00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00 },
+		{ 00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00 },
+		{ 00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00 },
+		{ 00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00 },
+		{ 00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00 },
+		{ 00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00 },
+		{ 00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00 },
+		{ 00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00 },
+		{ 00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00 },
+		{ 00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00 },
+		{ 00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00 },
+		{ 00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,53 },
+		{ 00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,53 },
+		{ 53,53,00,00,00,00,00,00,00,53,53,53,53,00,00,00,00,00,00,00,00,00,00,53,53 },
+		{ 53,53,53,00,00,00,00,53,53,53,53,53,53,53,00,00,00,00,00,00,00,00,00,53,53 },
+		{ 53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53 },
+		{ 53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53 },
+		{ 53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53 }
 	}
+
+	grid2 = { 
+		{ 00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00 },
+		{ 00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00 },
+		{ 00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00 },
+		{ 00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00 },
+		{ 00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00 },
+		{ 00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00 },
+		{ 00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00 },
+		{ 00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00 },
+		{ 00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00 },
+		{ 00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00 },
+		{ 00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00 },
+		{ 00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00 },
+		{ 53,00,00,53,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00 },
+		{ 53,00,00,53,53,00,00,00,00,00,00,00,00,00,00,53,00,00,00,00,00,00,00,00,00 },
+		{ 53,53,53,53,53,53,00,00,00,00,53,53,00,00,00,53,53,00,00,00,00,53,00,00,00 },
+		{ 53,53,53,53,53,53,00,53,00,53,53,53,53,00,53,53,53,53,00,00,00,53,00,00,00 },
+		{ 53,53,53,53,53,53,00,53,53,53,53,53,53,53,53,53,53,53,53,00,53,53,53,00,00 },
+		{ 53,53,53,53,53,53,00,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53 },
+		{ 53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53,53 },
+	}
+
+	local rand_nb = love.math.random(1, 2)
+	if rand_nb == 1 then Map.Grid = grid1 elseif rand_nb == 2 then Map.Grid = grid2 else Map.Grid = nil end
 
 	Map.TILE_HEIGHT = 32
 	Map.TILE_WIDTH = 32
@@ -109,10 +133,10 @@ function love.load()
     end
     ----
 
-	----Creating random Stars coordinates with a margin of 5px
+	----Creating random Stars coordinates
 	for i = 1, Stars.number do
-		local x_rand = love.math.random(5, GAME_WIDTH - 5)
-		local y_rand = love.math.random(5, GAME_HEIGHT - 5)
+		local x_rand = love.math.random(0, GAME_WIDTH)
+		local y_rand = love.math.random(0, GAME_HEIGHT)
 		Stars[i] = {}
 		Stars[i][1] = x_rand
 		Stars[i][2] = y_rand
@@ -174,8 +198,10 @@ function love.update(dt)
 			local c = math.floor(Lander.x / Map.TILE_WIDTH) + 1
 			local l = math.floor((Lander.y + Lander.height / 2) / Map.TILE_HEIGHT) + 1
 			if Map.Grid[l][c] == 53 then
-				if goodLanding(Lander.vx, Lander.vy, Lander.angle, Lander.fuel) == true then
+				if goodLanding() == true then
 					current_screen = 'win'
+				else
+					current_screen = 'gameover'
 				end
 				Lander.vx = 0
 				Lander.vy = 0
@@ -217,9 +243,7 @@ function love.draw()
 		love.graphics.print(str_title, GAME_WIDTH / 4, GAME_HEIGHT / 3.5, 0, 4, 4)
 		love.graphics.print(str_start, GAME_WIDTH / 3, GAME_HEIGHT / 3.5 + 132, 0, 2, 2)
 
-	end
-
-	if current_screen == 'win' then
+	elseif current_screen == 'win' then
 
 		local str_win = "MODULE IS LANDED. CONGRATULATIONS."
 		love.graphics.print(str_win, GAME_WIDTH / 5, GAME_HEIGHT / 2, 0, 2, 2)
@@ -227,9 +251,7 @@ function love.draw()
 		--DRAW THE SHIP
 		love.graphics.draw(Lander.img, Lander.x, Lander.y, math.rad(Lander.angle), 1, 1, Lander.width / 2, Lander.height / 2)
 
-	end
-
-	if current_screen == 'game' then
+	elseif current_screen == 'game' then
 		--DRAW THE SHIP
 		love.graphics.draw(Lander.img, Lander.x, Lander.y, math.rad(Lander.angle), 1, 1, Lander.width / 2, Lander.height / 2)
 
@@ -237,7 +259,6 @@ function love.draw()
 		if Lander.engine_on == true then
 			love.graphics.draw(Lander.img_engine, Lander.x, Lander.y, math.rad(Lander.angle), 1, 1, Lander.engine_width / 2, Lander.engine_height / 2)
 		end
-		----
 
 		----PRINTING LANDER DATA
 		local vx = round2(math.abs(Lander.vx), 1)
@@ -250,11 +271,16 @@ function love.draw()
 		str_data = str_data .. "Y VELOCITY : " .. vy .. "\n"
 		str_data = str_data .. "ANGLE : " .. ang .. "\n"
 		str_data = str_data .. "FUEL : " .. fuel .. "\n"
-
-		love.graphics.print(str_data, 20, 20, 0, 1.1, 1.1)
+		love.graphics.setColor(0,1,0)
+		love.graphics.print(str_data, 20, 20, 0, 2, 2)
+		love.graphics.setColor(1,1,1)
 		----
-	end
+	elseif current_screen == 'gameover' then
 
+		local str_gameover = "MODULE HAS CRASHED. MISSION A06B IS OVER."
+		love.graphics.print(str_gameover, GAME_WIDTH / 8, GAME_HEIGHT / 2, 0, 2, 2)
+
+	end
 end
 
 function love.keypressed(key)
