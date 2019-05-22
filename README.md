@@ -1,8 +1,9 @@
 # Game Dev Journey
 
-### Part#1 - Lua and Love2D
+### Quite basic Lunar Lander
 
-Lunar Lander prototype
 
-![Screenshot](screenshot/lunarlander_screenshot.png)
+![Screenshot](screenshot/screenshot1.png)
+![Screenshot](screenshot/screenshot2.png)
+
 
