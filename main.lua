@@ -1,4 +1,3 @@
-io.stdout:setvbuf('no')
 love.graphics.setDefaultFilter("nearest")
 
 function math.dist(x1,y1, x2,y2) return ((x2-x1)^2+(y2-y1)^2)^0.5 end
@@ -49,8 +48,12 @@ function love.load()
 
 	Lander.sound = love.audio.newSource('sounds/spaceship.wav', 'static')
 	Lander.sound:isLooping(true)
+	Lander.sound_explode = love.audio.newSource('sounds/explode_touch.wav', 'static')
 
 	gravity = 0.4
+	music = love.audio.newSource('sounds/apollo-houston-problem.mp3', 'stream')
+	music:setVolume(0.1)
+	music:play()
 
 	Stars = {}
 	Stars.number = 100
@@ -201,6 +204,8 @@ function love.update(dt)
 				if goodLanding() == true then
 					current_screen = 'win'
 				else
+					music:stop()
+					Lander.sound_explode:play()
 					current_screen = 'gameover'
 				end
 				Lander.vx = 0
